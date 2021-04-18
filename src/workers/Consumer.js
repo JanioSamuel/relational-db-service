@@ -6,5 +6,10 @@ queueActions.consume('relational.db.service', async message => {
   const login = JSON.parse(message.content);
   console.log('Login: ', login.username);
 
-  DbController.login(login);
+  if (login.action === 'signup') {
+    DbController.signup(login);
+  } else {
+    DbController.login(login);
+  }
+
 });
