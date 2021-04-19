@@ -1,9 +1,8 @@
-const producer = require('../workers/Producer');
 const { v4: uuidv4 } = require('uuid');
 const User = require('../model/User');
 
-async function login(req) {
-  const username = req.username;
+async function login(req, res) {
+  const username = req.body.username;
 
   const user = await User.findOne({
     where: {
@@ -11,27 +10,26 @@ async function login(req) {
     }
   });
 
-  producer.sendToQueue('auth.service', user ? user : null);
+  return res.json(user ? user : null);
 }
 
-async function signup(req) {
+async function signup(req, res) {
   const userDb = await User.findOne({
     where: {
-      username: req.username
+      username: req.body.username
     }
   });
   if (userDb) {
-    producer.sendToQueue('auth.service', { action: 'error', message: 'User already exists' });
-    console.error('User already exists')
+    return res.json({ action: 'error', message: 'User already exists' });
   } else {
     const newUser = {
       id: uuidv4(),
-      username: req.username,
-      password: req.password,
+      username: req.body.username,
+      password: req.body.password,
     }
     const user = await User.create(newUser);
 
-    producer.sendToQueue('auth.service', { user, action: 'signup' });
+    return res.json({ user, action: 'signup' });
   }
 }
 
